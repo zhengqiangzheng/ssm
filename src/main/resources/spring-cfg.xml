@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context-4.0.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+    <!-- 主要是整合spring和mybatis-->
+    <aop:aspectj-autoproxy proxy-target-class="true"/> <!--开启切面-->
+
+    <context:annotation-config/><!--注解打开-->
+
+    <context:component-scan base-package="com.zq"/> <!--配置包扫描-->
+
+    <context:property-placeholder location="classpath:jdbc.properties"/><!--配置jdbc.propeties路径-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/><!--设置数据源-->
+        <property name="mapperLocations" value="classpath:com/zq/dao/**.xml"/><!--配置XML路径-->
+    </bean>
+    <!--接口的配置文件-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="classpath:top.program.dao"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+    <!--事物标签 tx -->
+    <tx:annotation-driven transaction-manager="transactionManager"/><!--传给jr包就可以帮助管理事务-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"><!--事务管理器-->
+        <property name="dataSource" ref="dataSource"/><!--管理数据源-->
+    </bean><!--管理事务有一个注解@Transaction 如果那个方法需要开启事务 往方法上声明就可以了-->
+    <!-- 还有切面管理事物的方法 百度spring事物管理 但是由于命名容易出错 其实注解也是利用切面管理-->
+    <!--druid数据源,数据库设置-->
+    <!-- 这些事阿里巴巴的 连接池 jar的配置-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="driverClassName" value="${jdbc.driver}" />
+        <property name="initialSize" value="1" />
+        <property name="minIdle" value="1" />
+        <property name="maxActive" value="20" />
+        <property name="maxWait" value="60000" />
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+        <property name="minEvictableIdleTimeMillis" value="300000" />
+        <property name="validationQuery" value="${validationQuery}" />  <!-- 验证连接 的sql是否能连接 是否能用-->
+        <property name="testWhileIdle" value="true" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+        <property name="poolPreparedStatements" value="true" />
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+                  value="20" />
+        <property name="filters" value="mergeStat" />
+    </bean>
+</beans>
